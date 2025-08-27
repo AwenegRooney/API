@@ -1,0 +1,22 @@
+name: Keep Render Service Alive
+
+# Controls when the workflow will run
+on:
+  # 1. Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+  # 2. Sets up a schedule: at the 0th minute of every hour (e.g., 12:00, 12:10, 12:20...)
+  schedule:
+    - cron: '*/10 * * * *' # Cron syntax for every 10 minutes
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping Render Web Service
+        run: |
+          # Use curl to send a GET request to your homepage.
+          # The -I flag fetches the headers only, which is sufficient for a ping.
+          curl -s -I "$URL" > /dev/null 2>&1 && echo "Ping successful to $URL" || echo "Ping failed to $URL"
+        env:
+          URL: 'https://api-0ky7.onrender.com/'
