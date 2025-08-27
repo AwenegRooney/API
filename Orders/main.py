@@ -10,6 +10,10 @@ class Product(BaseModel):
     name : str
     price : int
 
+class ProductUpdate(BaseModel):
+    name : str = None
+    price : int = None
+
 class Order(BaseModel):
     order_id: Optional[UUID] = uuid4()
     product_id : UUID
@@ -37,6 +41,18 @@ orders = [
 ]
 
 @app.get('/')
+def endpoints():
+    return {
+        "/products" : "List of available products",
+        "/products/add" : "Add a new product",
+        "/products/delete" : "Remove a specific product",
+        "/products/update" : "Updates a product",
+        "/orders" : "List of all orders",
+        "/orders/add" : "Adding a new order",
+        "/orders/delete" : "Remove a specific order"
+    }
+
+@app.get('/products')
 def display_products():
     return {"Available": products}
 
@@ -52,7 +68,7 @@ def add_product(new_product: Product):
     products.append(new_product)
     return f"{new_product.name.capitalize()} was added"
 
-@app.delete('/products/remove/{product_id}')
+@app.delete('/products/delete/{product_id}')
 def remove_order(product_id: UUID):
     for product in products:
         if product.id == product_id:
@@ -63,6 +79,22 @@ def remove_order(product_id: UUID):
         status_code=404,
         detail=f"Product with id {product_id}, doesn't exist."
     )
+
+@app.put('/products/update/{product_id}')
+def update_product(product_id : UUID, update: ProductUpdate):
+    if not update.name and not update.price:
+        return "No change applied"
+    
+    #updating the product
+    for product in products:
+        if product.id == product_id:
+            if update.price:
+                product.price = update.price
+            if update.name:
+                product.name = update.name
+
+            return "Product successfully updated"
+                
 
 @app.get('/orders')
 def display_orders():
