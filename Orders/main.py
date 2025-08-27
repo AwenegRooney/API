@@ -1,12 +1,12 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from uuid import UUID, uuid4
 from typing import Optional
 
 app = FastAPI()
 
 class Product(BaseModel):
-    id : Optional[UUID] = uuid4()
+    id : UUID = Field(default_factory=uuid4)
     name : str
     price : int
 
@@ -15,8 +15,8 @@ class ProductUpdate(BaseModel):
     price : int = None
 
 class Order(BaseModel):
-    order_id: Optional[UUID] = uuid4()
-    product_id : UUID
+    order_id: UUID = Field(default_factory=uuid4)
+    product_id : UUID = Field(default_factory=uuid4)
     quantity : int
 
 products = [
@@ -64,7 +64,6 @@ def add_product(new_product: Product):
                 status_code=409, 
                 detail=f"{new_product.name.capitalize()} already exist exist."
             )
-    new_product.id = uuid4()
     products.append(new_product)
     return f"{new_product.name.capitalize()} was added"
 
@@ -104,7 +103,6 @@ def display_orders():
 def add_order(order: Order):
     for product in products:
         if product.id == order.product_id:
-            order.order_id = uuid4()
             orders.append(order)
             return {"Name": product.name, "Quantity": order.quantity}
         
