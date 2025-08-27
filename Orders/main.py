@@ -43,6 +43,7 @@ orders = [
 @app.get('/')
 def endpoints():
     return {
+        "Health" : "Alive",
         "/products" : "List of available products",
         "/products/add" : "Add a new product",
         "/products/delete" : "Remove a specific product",
@@ -65,14 +66,14 @@ def add_product(new_product: Product):
                 detail=f"{new_product.name.capitalize()} already exist exist."
             )
     products.append(new_product)
-    return f"{new_product.name.capitalize()} was added"
+    return {"Product_id": new_product.id, "status": "Added"}
 
 @app.delete('/products/delete/{product_id}')
 def remove_order(product_id: UUID):
     for product in products:
         if product.id == product_id:
             products.remove(product)
-            return f"Product {product_id} removed"
+            return {"Product_id": product_id, "status": "Deleted"}
         
     raise HTTPException(
         status_code=404,
@@ -82,17 +83,24 @@ def remove_order(product_id: UUID):
 @app.put('/products/update/{product_id}')
 def update_product(product_id : UUID, update: ProductUpdate):
     if not update.name and not update.price:
-        return "No change applied"
+        return {"Product_id": product_id, "Status": "No change"}
     
     #updating the product
     for product in products:
         if product.id == product_id:
-            if update.price:
-                product.price = update.price
-            if update.name:
+            if update.name and update.name.lower() != product.name:
+                for exist_products in products:
+                    if exist_products.id != product_id and exist_products.name.lower() == update.name.lower():
+                        raise HTTPException(
+                            status_code=409,
+                            detail=f"Product name '{update.name}' already exists."
+                        )
+
                 product.name = update.name
 
-            return "Product successfully updated"
+            if update.price:
+                product.price = update.price
+            return {"Product_id": product_id, "Status": "Updated"}
                 
 
 @app.get('/orders')
@@ -116,7 +124,7 @@ def remove_order(order_id: UUID):
     for order in orders:
         if order.order_id == order_id:
             orders.remove(order)
-            return f"Order {order_id} removed"
+            return {"Order_id": order_id, "status": "Deleted"}
         
     raise HTTPException(
         status_code=404,
